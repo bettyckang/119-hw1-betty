@@ -96,10 +96,11 @@ def load_input():
     # Fill out this part. You can use column access to get only the
     # columns we are interested in using the NEW_COLUMNS variable above.
     # Make sure you return the columns in the new order.
-    # TODO
 
-    # When you are done, remove the next line...
-    raise NotImplementedError
+    # Segment the dataframes to only include the columns we are interested in, order automatically follows
+    df_2019 = df_2019[NEW_COLUMNS]
+    df_2020 = df_2020[NEW_COLUMNS]
+    df_2021 = df_2021[NEW_COLUMNS]
 
     # ...and keep this line to return the dataframes.
     return [df_2019, df_2020, df_2021]
@@ -138,7 +139,21 @@ def q2(dfs):
     # - the number of rows
     # - the number of columns
     # - the columns are listed in the correct order
-    raise NotImplementedError
+    result = True
+
+    for df in dfs:
+        if df.shape != dfs[0].shape: # verify shape of second and third dataframe against first
+            result = False
+            break
+        elif df.shape != dfs[1].shape: # verify shape of first and third dataframe against second
+            result = False
+            break
+        # Number of rows and columns are already verified by shape check above
+        elif (df.columns != NEW_COLUMNS).any(): # verify column names are in correct order, check whether any column name is not equal
+            result = False
+            break
+
+    return result
 
 """
 ===== Interlude: Checking your output so far =====
