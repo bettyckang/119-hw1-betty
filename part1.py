@@ -190,11 +190,25 @@ remember to check the output in part1-answers.txt.
 """
 
 def q3(dfs):
-    # Check:
-    # - that the set of university names in each year is the same
-    # Return:
-    # - True if they are the same, and False otherwise.
-    raise NotImplementedError
+    # Create a list to store the set of university names for each year
+    universities_compare = [] 
+
+    # Loop through each year dataframe and get university set
+    for df in dfs: # If university column is missing return False
+        if "university" not in df.columns:
+            return False
+        else:
+            universities_compare.append(set(df["university"])) # Add list of unique universities
+
+    # Loop through sets of universities (data type is list)
+    for university in universities_compare:
+        if university != universities_compare[0]: # Compare each set of universities to the first set
+            return False
+
+    return True
+
+dfs = load_input()
+print(q3(dfs))
 
 """
 3b (commentary).
@@ -202,6 +216,8 @@ Did the checks pass or fail?
 Comment below and explain why.
 
 === ANSWER Q3b BELOW ===
+The first check passed, dataframes had the same shape, number of rows and columns, and the columns were in the correct order.
+The second check failed, the set of university names in each year was not the same.
 
 === END OF Q3b ANSWER ===
 """
@@ -226,14 +242,24 @@ Hint:
     to get the university name:
     try .iloc on the sample, then ["university"].
 """
+import random
 
 def q4(dfs):
-    # Sample 5 rows from each dataframe
-    # Print out the samples
-    raise NotImplementedError
+    lists_of_universities = []
 
-    # Answer as a list of 5 university names
-    return []
+    # Loop through each dataframe and sample 5 rows
+    for df in dfs:
+        universities = []
+        university_column = df.columns.get_loc("university") # Get the index of the university column
+        df_sample = df.sample(5) # Get a random sample of 5 rows
+        universities.append(df_sample.iloc[:, university_column].values.tolist()) # Get the university name at the random index (value only)
+
+        # Append the list of universities to the list of lists
+        lists_of_universities.append(universities)
+
+    return lists_of_universities[2] # Return the list for 2021 only 
+
+print(q4(dfs))
 
 """
 Once you have implemented this part,

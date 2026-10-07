@@ -1,7 +1,7 @@
 q1,3
 q2,True
-q3a,Not Implemented
-q4,Not Implemented
+q3a,False
+q4,[['City University of Hong Kong', 'Harvard University', 'The University of Tokyo', 'Imperial College London', 'National Taiwan University (NTU)']]
 q5a,Not Implemented
 q5b,Not Implemented
 q5c,Not Implemented
@@ -21,4 +21,4 @@ q18,Not Implemented
 q20a,Not Implemented
 q20b,Not Implemented
 q21,Not Implemented
-PART 1,21
+PART 1,19
