@@ -207,9 +207,6 @@ def q3(dfs):
 
     return True
 
-dfs = load_input()
-print(q3(dfs))
-
 """
 3b (commentary).
 Did the checks pass or fail?
@@ -249,17 +246,14 @@ def q4(dfs):
 
     # Loop through each dataframe and sample 5 rows
     for df in dfs:
-        universities = []
         university_column = df.columns.get_loc("university") # Get the index of the university column
         df_sample = df.sample(5) # Get a random sample of 5 rows
-        universities.append(df_sample.iloc[:, university_column].values.tolist()) # Get the university name at the random index (value only)
+        universities = df_sample.iloc[:, university_column].values.tolist() # Get the university name at the random index (value only)
 
         # Append the list of universities to the list of lists
         lists_of_universities.append(universities)
 
     return lists_of_universities[2] # Return the list for 2021 only 
-
-print(q4(dfs))
 
 """
 Once you have implemented this part,
@@ -274,13 +268,14 @@ some advantages and drawbacks?
 
 === ANSWER Q4b BELOW ===
 Strengths:
-1.
-2.
+1. Data is available for multiple years, which allows for analysis of trends over time
+2. The shape of the dataset is consistent across years, which makes it easier to work with and analyze since they have same characteristics and number of observations
 
 Weaknesses:
-1.
-2.
-3.
+1. The three years do not have the same universities, which may make it difficult to compare across years and get comprehensive sampling
+2. The dataset may have missing or NA values, which can affect the quality of analysis
+3. University names may be inconsistent across years, which can make it difficult to match universities across years (e.g. UC Berkeley vs University of California, Berkeley)
+
 === END OF Q4b ANSWER ===
 """
 
@@ -305,17 +300,20 @@ Example: if there are 5 non-null values in the first column, 3 in the second, 4 
 """
 
 def q5a(dfs):
-    # TODO
-    raise NotImplementedError
-    # Remember to return the list here
-    # (Since .info() does not return any values,
-    # for this part, you will need to copy and paste
-    # the output as a hardcoded list.)
+    for df in dfs:
+        df.info() # Display the number of non-null values in each column in the console
+        non_null_values_2021 = [100, 100, 100, 100, 100, 100, 100, 100] # Hardcoded list of non-null values for 2021 data
+
+    return non_null_values_2021
+
 
 def q5b(dfs):
-    # TODO
-    raise NotImplementedError
-    # Remember to return the list here
+    non_null_values = []
+    for df in dfs:
+        non_null_counts = df.count().tolist() # Get the count of non-null values for each column
+        non_null_values.append(non_null_counts)
+
+    return non_null_values[2]   # Return the list for 2021 only
 
 """
 5c.
@@ -326,10 +324,8 @@ We will use this in the unit tests below.
 """
 
 def q5c():
-    raise NotImplementedError
-    # TODO: fill this in with the expected number
-    # num_non_null = [0, 0, ...]
-    # return num_non_null
+    num_non_null = [100, 100, 100, 100, 100, 100, 100, 100]
+    return num_non_null
 
 """
 ===== Interlude again: Unit tests =====
@@ -357,29 +353,30 @@ from each unit test (function beginning with `test_`).
 Then, run `pytest part1.py` in the terminal.
 """
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_q1():
     dfs = load_input()
     assert len(dfs) == 3
     assert all([isinstance(df, pd.DataFrame) for df in dfs])
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_q2():
     dfs = load_input()
     assert q2(dfs)
 
-@pytest.mark.skip
+#@pytest.mark.skip
+@pytest.mark.xfail
 def test_q3():
     dfs = load_input()
     assert q3(dfs)
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_q4():
     dfs = load_input()
     samples = q4(dfs)
     assert len(samples) == 5
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_q5():
     dfs = load_input()
     num_non_null = q5c()
@@ -392,12 +389,18 @@ def test_q5():
 
 === ANSWER Q6a BELOW ===
 
+Yes, test_q3 failed
+
 === END OF Q6a ANSWER ===
 
 6b. For each test that fails, is it because your code
 is wrong or because the test is wrong?
 
 === ANSWER Q6b BELOW ===
+
+The test fails because the set of universitiy names each year is not the same.
+Therefore, Q3 returns False, which is the correct behavior. 
+The test is wrong because assert expects a return of True, which is not the appropriate return.
 
 === END OF Q6b ANSWER ===
 
@@ -415,8 +418,7 @@ Please include expected failures (@pytest.mark.xfail).
 """
 
 def q6c():
-    # TODO
-    raise NotImplementedError
+    return 1 # Only test_q3 has failed, hardcode number of failures in
 
 """
 ===== End of interlude =====
@@ -433,9 +435,16 @@ As your answer to this part, return the number of columns in each dataframe afte
 """
 
 def q7(dfs):
-    # TODO
-    raise NotImplementedError
-    # Remember to return the list here
+    for df in dfs: # Hardcoding in each year based on dataframe order since Python cannot reliably extract dataframe names
+        if df is dfs[0]:
+            df['year'] = 2019
+        elif df is dfs[1]:
+            df['year'] = 2020
+        elif df is dfs[2]:
+            df['year'] = 2021
+
+    df_column_counts = [len(df.columns) for df in dfs] # Get the number of columns in each dataframe
+    return df_column_counts
 
 """
 8a.
@@ -445,16 +454,23 @@ As your answer, return the count for "USA" in 2021.
 """
 
 def q8a(dfs):
-    # Enter Code here
-    # TODO
-    raise NotImplementedError
-    # Remember to return the count here
+    for df in dfs:
+        region_counts = df['region'].value_counts() # Count the number of universities in each region
+        print(f"Year: {df['year'].iloc[0]}") # Print the year for the dataframe, is same for all observations in df
+        print(region_counts) # Print the counts for each region
+        
+        if df['year'].iloc[0] == 2021 and "USA" in region_counts.index:
+            usa_count = region_counts["USA"]
+
+    return usa_count
 
 """
 8b.
 Do you notice some trend? Comment on what you observe and why might that be consistent throughout the years.
 
 === ANSWER Q8b BELOW ===
+
+The top three regions remain consistent across years (USA, UK, China) and contain a majority of all universities in the dataset
 
 === END OF Q8b ANSWER ===
 """
@@ -471,10 +487,12 @@ The list should contain 5 elements.
 """
 
 def q9(dfs):
-    # Enter code here
-    # TODO
-    raise NotImplementedError
-    # Return the list here
+    for df in dfs:
+        if df['year'].iloc[0] == 2021:
+            # Get the average of all attributes for 2021
+            avg_scores = df[['academic reputation', 'employer reputation', 'faculty student', 'citations per faculty', 'overall score']].mean().tolist() 
+
+    return avg_scores
 
 """
 10.
@@ -487,10 +505,11 @@ Then in q10, print the first 5 rows of the avg_2021 dataframe.
 """
 
 def q10_helper(dfs):
-    # Enter code here
-    # TODO
-    # Placeholder for the avg_2021 dataframe
-    avg_2021 = pd.DataFrame()
+    for df in dfs:
+        if df['year'].iloc[0] == 2021:
+            # Group by region and calculate the mean for all attributes excluding 'rank' and 'year'
+            avg_2021 = df.groupby('region')[['academic reputation', 'employer reputation', 'faculty student', 'citations per faculty', 'overall score']].mean().reset_index()
+
     return avg_2021
 
 def q10(avg_2021):
@@ -501,9 +520,8 @@ def q10(avg_2021):
     As your answer, simply return the number of rows printed.
     (That is, return the integer 5)
     """
-    # Enter code here
-    raise NotImplementedError
-    # Return 5
+    print(avg_2021.head(5)) # Print the first 5 rows of the avg_2021 dataframe
+    return 5
 
 """
 ===== Questions 11-14: Exploring the avg_2021 dataframe =====
@@ -515,11 +533,14 @@ As your answer to this part, return the first row of the sorted dataframe.
 """
 
 def q11(avg_2021):
-    raise NotImplementedError
+    avg_2021_sorted = avg_2021.sort_values(by='overall score', ascending=False) # Sort the dataframe by overall score in descending order
+
+    return avg_2021_sorted.iloc[0] # Return the first row of the sorted dataframe
 
 """
 12a.
 What do you observe from the table above? Which country tops the ranking?
+- Singapore tops the ranking. It has a very high overall score, near 100. The faculty student score is perfect, with employer reputation slightly lowering overall score
 
 What is one country that went down in the rankings
 between 2019 and 2021?

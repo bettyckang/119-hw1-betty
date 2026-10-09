@@ -1,16 +1,22 @@
 q1,3
 q2,True
 q3a,False
-q4,[['City University of Hong Kong', 'Harvard University', 'The University of Tokyo', 'Imperial College London', 'National Taiwan University (NTU)']]
-q5a,Not Implemented
-q5b,Not Implemented
-q5c,Not Implemented
-q6c,Not Implemented
-q7,Not Implemented
-q8a,Not Implemented
-q9,Not Implemented
-q10,Not Implemented
-q11,Not Implemented
+q4,['University of California, Los Angeles (UCLA)', 'The University of New South Wales (UNSW Sydney)', 'University of Amsterdam', 'The University of Warwick', 'National University of Singapore (NUS)']
+q5a,[100, 100, 100, 100, 100, 100, 100, 100]
+q5b,[100, 100, 100, 100, 100, 100, 100, 100]
+q5c,[100, 100, 100, 100, 100, 100, 100, 100]
+q6c,1
+q7,[9, 9, 9]
+q8a,29
+q9,[67.041, 67.68, 73.539, 82.147, 75.504]
+q10,5
+q11,region                   Singapore
+academic reputation          82.25
+employer reputation           75.3
+faculty student              100.0
+citations per faculty        95.95
+overall score                 91.8
+Name: 13, dtype: object
 q12,Not Implemented
 q13,Not Implemented
 q14a,Not Implemented
@@ -21,4 +27,4 @@ q18,Not Implemented
 q20a,Not Implemented
 q20b,Not Implemented
 q21,Not Implemented
-PART 1,19
+PART 1,10
