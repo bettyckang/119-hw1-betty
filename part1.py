@@ -540,7 +540,6 @@ def q11(avg_2021):
 """
 12a.
 What do you observe from the table above? Which country tops the ranking?
-- Singapore tops the ranking. It has a very high overall score, near 100. The faculty student score is perfect, with employer reputation slightly lowering overall score
 
 What is one country that went down in the rankings
 between 2019 and 2021?
@@ -561,8 +560,24 @@ and the name of one country/region that went down in the rankings.
 """
 
 def q12a(avg_2021):
-    raise NotImplementedError
-    return ("TODO", "TODO")
+    # Get the country with the highest overall score in 2021
+    avg_2021_sorted = avg_2021.sort_values(by='overall score', ascending=False)
+    top_country = avg_2021_sorted.iloc[0]['region'] 
+
+    # Get a country that went down in the rankings between 2019 and 2021
+    df_2019 = load_input()[0] # Load the 2019 dataframe
+    avg_2019 = df_2019.groupby('region')[['overall score']].mean().reset_index()
+    avg_2019_sorted = avg_2019.sort_values(by='overall score', ascending=False)
+
+    # Create ranking columns for merge
+    avg_2019_sorted['ranking'] = range(1, len(avg_2019_sorted) + 1)
+    avg_2021_sorted['ranking'] = range(1, len(avg_2021_sorted) + 1)
+
+    # Merge to compare rankings directly
+    merged = pd.merge(avg_2019_sorted, avg_2021_sorted, on='region', suffixes=('_2019', '_2021'))
+    declined = merged[merged['ranking_2021'] > merged['ranking_2019']]
+
+    return (top_country, declined.iloc[0]['region'])
 
 """
 12b.
@@ -570,6 +585,10 @@ Comment on why the country above is at the top of the list.
 (Note: This is an open-ended question.)
 
 === ANSWER Q12b BELOW ===
+
+Singapore tops the ranking because it has a very high overall score, near 100. The faculty student score is perfect, with employer reputation slightly lowering overall score. 
+This indicates that Singapore has a strong academic reputation and is highly regarded by employers, which contributes to its high overall score.
+Singapore is globally regarded as a first world country with a strong education system, which is reflected in its high ranking.
 
 === END OF Q12b ANSWER ===
 """
@@ -588,16 +607,21 @@ As the answer to this part, return the name of the plot you saved.
 import matplotlib.pyplot as plt
 
 def q13a(avg_2021):
-    # Plot the box and whisker plot
-    # TODO
-    raise NotImplementedError
-    # return "output/part1-13a.png"
+    avg_2021.boxplot()
+    plt.xticks(rotation=45)
+    plt.title('Distribution of 2021 Scores')
+    plt.savefig('output/part1-13a.png', bbox_inches='tight')
+    return "output/part1-13a.png"
 
 """
 b. Do you observe any anomalies in the box and whisker
 plot?
 
 === ANSWER Q13b BELOW ===
+
+There is only one outlier in the overall score attribute, which is the score of 92 that was attributed with Singapore in the previous question
+This does not necessarily indicate an anomaly, but is notably higher than all other overall scores.
+All other attributes have a distribution without any outliers.
 
 === END OF Q13b ANSWER ===
 """
@@ -613,15 +637,23 @@ As the answer to this part, return the name of the plot you saved.
 """
 
 def q14a(avg_2021):
-    # Enter code here
-    # TODO
-    raise NotImplementedError
-    # return "output/part1-14a.png"
+    plt.figure()
+    plt.scatter(avg_2021['academic reputation'], avg_2021['employer reputation'])
+
+    plt.xlabel('Academic Reputation')
+    plt.ylabel('Employer Reputation')
+    plt.title('Academic Reputation vs. Employer Reputation (2021)')
+    plt.savefig('output/part1-14a.png', bbox_inches='tight')
+
+    return "output/part1-14a.png"
 
 """
 Do you observe any general trend?
 
 === ANSWER Q14b BELOW ===
+
+The comparison of academic reputation and employer reputation did not have a strong correlation, which was surprising to me. 
+I expected to see a positive correlation/trend, since I assumed that a positive employer reputation would be associated with a better academic reputation.
 
 === END OF Q14b ANSWER ===
 
@@ -644,16 +676,24 @@ As your answer, return the shape of the new dataframe.
 """
 
 def q15_helper(dfs):
-    # Return the new dataframe
-    # TODO
-    # Placeholder:
-    top_10 = pd.DataFrame()
+    merged = None 
+    for df in dfs:
+        year = df['year'].iloc[0]
+        df = df.sort_values(by='overall score', ascending=False).head(10) # Sort by overall score and keep top 10
+        df_new = df[['university', 'overall score']].add_suffix(f'_{year}')
+        df_new['ranking'] = range(1, len(df_new) + 1)  # Create ranking column for merging
+
+        if merged is None:
+            merged = df_new
+        else:
+            merged = pd.merge(merged, df_new, on='ranking')
+
+    top_10 = merged.drop(columns=['ranking'])  # Drop the ranking column after merging
+
     return top_10
 
 def q15(top_10):
-    # Enter code here
-    # TODO
-    raise NotImplementedError
+    return top_10.shape
 
 """
 16.
@@ -666,11 +706,9 @@ You should be able to modify the column names directly in the dataframe.
 As your answer, return the new column names as a list.
 """
 
+# I already renamed the columns when merging in q15, so I will just return the column names as a list here
 def q16(top_10):
-    # Enter code here
-    # TODO
-    raise NotImplementedError
-    # return list(df.columns)
+    return list(top_10.columns)
 
 """
 17a.
