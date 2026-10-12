@@ -1,7 +1,7 @@
 q1,3
 q2,True
 q3a,False
-q4,['Ruprecht-Karls-Universität Heidelberg', 'Johns Hopkins University', 'Brown University', 'EPFL', 'Stanford University']
+q4,['Monash University', 'University of Chicago', 'The University of Tokyo', 'Stanford University', 'Lomonosov Moscow State University']
 q5a,[100, 100, 100, 100, 100, 100, 100, 100]
 q5b,[100, 100, 100, 100, 100, 100, 100, 100]
 q5c,[100, 100, 100, 100, 100, 100, 100, 100]
@@ -20,11 +20,24 @@ Name: 13, dtype: object
 q12,('Singapore', 'South Korea')
 q13,output/part1-13a.png
 q14a,output/part1-14a.png
-q15,(10, 6)
-q16,['university_2019', 'overall score_2019', 'university_2020', 'overall score_2020', 'university_2021', 'overall score_2021']
-q17,Not Implemented
-q18,Not Implemented
-q20a,Not Implemented
-q20b,Not Implemented
+q15,(10, 4)
+q16,['university', 'overall score_2019', 'overall score_2020', 'overall score_2021']
+q17,output/part1-17a.png
+q18,output/part1-18.png
+q20a,                                      university  region  academic reputation  ...  overall score  year  new_score
+0    Massachusetts Institute of Technology (MIT)     USA                 99.8  ...          100.0  2021      493.9
+1                            Stanford University     USA                 98.6  ...           98.4  2021      464.5
+2                             Harvard University     USA                 99.6  ...           97.4  2021      445.5
+3                           University of Oxford      UK                 84.7  ...           97.2  2021      480.1
+4   California Institute of Technology (Caltech)     USA                100.0  ...           96.9  2021      481.4
+..                                           ...     ...                  ...  ...            ...   ...        ...
+95                      University of Nottingham      UK                 49.7  ...           60.8  2021      345.0
+96                     University of Southampton      UK                 68.1  ...           60.6  2021      368.4
+97                             Boston University     USA                 62.1  ...           60.5  2021      308.1
+98             KTH Royal Institute of Technology  Sweden                 72.8  ...           60.5  2021      326.4
+99                      University of St Andrews     USA                 67.4  ...           59.9  2021      371.0
+
+[100 rows x 9 columns]
+q20b,['University of California, Berkeley (UCB)', 'Massachusetts Institute of Technology (MIT)', 'ETH Zurich - Swiss Federal Institute of Technology', 'California Institute of Technology (Caltech)', 'University of Oxford', 'UCL', 'University of Cambridge', 'The Australian National University', 'Imperial College London', 'Stanford University']
 q21,Not Implemented
-PART 1,5
+PART 1,1

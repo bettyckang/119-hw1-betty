@@ -142,14 +142,14 @@ def q2(dfs):
     result = True
 
     for df in dfs:
-        if df.shape != dfs[0].shape: # verify shape of second and third dataframe against first
+        if df.shape != dfs[0].shape: # Verify shape of second and third dataframe against first
             result = False
             break
-        elif df.shape != dfs[1].shape: # verify shape of first and third dataframe against second
+        elif df.shape != dfs[1].shape: # Verify shape of first and third dataframe against second
             result = False
             break
         # Number of rows and columns are already verified by shape check above
-        elif (df.columns != NEW_COLUMNS).any(): # verify column names are in correct order, check whether any column name is not equal
+        elif (df.columns != NEW_COLUMNS).any(): # Verify column names are in correct order, check whether any column name is not equal
             result = False
             break
 
@@ -608,7 +608,7 @@ import matplotlib.pyplot as plt
 
 def q13a(avg_2021):
     avg_2021.boxplot()
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45) # Rotate x-axis labels for readability
     plt.title('Distribution of 2021 Scores')
     plt.savefig('output/part1-13a.png', bbox_inches='tight')
     return "output/part1-13a.png"
@@ -676,19 +676,20 @@ As your answer, return the shape of the new dataframe.
 """
 
 def q15_helper(dfs):
-    merged = None 
+    top_10 = None 
     for df in dfs:
         year = df['year'].iloc[0]
         df = df.sort_values(by='overall score', ascending=False).head(10) # Sort by overall score and keep top 10
-        df_new = df[['university', 'overall score']].add_suffix(f'_{year}')
-        df_new['ranking'] = range(1, len(df_new) + 1)  # Create ranking column for merging
+        df_new = df[['university', 'overall score']] # Keep only necessary columns
+        df_new = df_new.rename(columns={'overall score': f'overall score_{year}'}) # Rename overall score columns for each year
 
-        if merged is None:
-            merged = df_new
+        # Merging sequence: merge each dataframe iteratively with first dataframe on university column 
+        # Can merge on university since they are same across the three years
+        # Row order no longer corresponds to ranking - each row represents a University and has its score across 3 years
+        if top_10 is None: 
+            top_10 = df_new
         else:
-            merged = pd.merge(merged, df_new, on='ranking')
-
-    top_10 = merged.drop(columns=['ranking'])  # Drop the ranking column after merging
+            top_10 = pd.merge(top_10, df_new, on='university')
 
     return top_10
 
@@ -724,16 +725,33 @@ Note:
 """
 
 def q17a(top_10):
-    # Enter code here
-    # TODO
-    raise NotImplementedError
-    # return "output/part1-17a.png"
+    years = [2019, 2020, 2021]  # List of years for plotting
+
+    plt.figure(figsize=(12,6)) # Make plot wider to accommodate legend
+
+    for i, row in top_10.iterrows():
+        scores = [row[f'overall score_{year}'] for year in years]
+        plt.plot(years, scores, marker='o', label=row['university']) 
+
+    plt.xlabel('Year')
+    plt.ylabel('Overall Score')
+    plt.title('Top 10 Universities: Overall Scores Over Years')
+    plt.xticks([2019, 2020, 2021]) # Define years for X axis
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') # Move legend so it doesn't cover plot
+    plt.tight_layout()
+    plt.savefig('output/part1-17a.png', bbox_inches='tight') 
+
+    return "output/part1-17a.png"
 
 """
 17b.
 What do you observe from the plot above? Which university has remained consistent in their scores? Which have increased/decreased over the years?
 
 === ANSWER Q17b BELOW ===
+
+From the plot we observe the previously noted disclaimer where the 2021 dataset is almost identical to the 2020 dataset.
+When comparing between 2019 and 2020, only one university remained consistent in overall score, MIT. All other universities fluctuated.
+Universities like Stanford and Harvard decreased in overall score, while UCL and University of Oxford increased. 
 
 === END OF Q17b ANSWER ===
 """
@@ -743,7 +761,7 @@ What do you observe from the plot above? Which university has remained consisten
 
 We're almost done!
 
-Let's look at another useful tool to get an idea about how different variables are corelated to each other. We call it a **correlation matrix**
+Let's look at another useful tool to get an idea about how different variables are correlated to each other. We call it a **correlation matrix**
 
 A correlation matrix provides a correlation coefficient (a number between -1 and 1) that tells how strongly two variables are correlated. Values closer to -1 mean strong negative correlation whereas values closer to 1 mean strong positve correlation. Values closer to 0 show variables having no or little correlation.
 
@@ -758,18 +776,31 @@ As the answer to this part, return the name of the plot you saved.
 
 **Helpful link:** https://datatofish.com/correlation-matrix-pandas/
 """
+import seaborn as sn
 
 def q18(dfs):
-    # Enter code here
-    # TODO
-    raise NotImplementedError
-    # return "output/part1-18.png"
+    df_2021 = dfs[-1] # Obtain only 2021 dataframe
+    # Drop non-attribute columns
+    df_2021_new = df_2021.drop(columns=["university", "region", "rank", "year"])
+
+    corr_matrix = df_2021_new.corr() # Create correlation matrix
+    
+    plt.figure()
+    sn.heatmap(corr_matrix, annot=True) # Create visual for correlation matrix
+    plt.savefig('output/part1-18.png', bbox_inches='tight') 
+
+    return "output/part1-18.png"
 
 """
 19. Comment on at least one entry in the matrix you obtained in the previous
 part that you found surprising or interesting.
 
 === ANSWER Q19 BELOW ===
+
+I was surprised to see that overall score is most highly correlated with citations per faculty, which is not highly correlated with any other attributes
+I would have expected citations per faculty to be attributed with a higher academic and employer reputation, particularly for research universities.
+I also expected all attributes to have a correlation with overall score >0.5, while that is only true for citations per faculty.
+
 
 === END OF Q19 ANSWER ===
 """
@@ -807,14 +838,24 @@ Use your new column to sort the data by the new values and return the top 10 uni
 """
 
 def q20a(dfs):
-    # TODO
-    raise NotImplementedError
-    # For your answer, return the score for Berkeley in the new column.
+    df_2021 = dfs[-1] # Obtain only 2021 dataframe
+    df_2021_new = df_2021.drop(columns=["rank"]) # Drop ranking since we will rerank
+    mask = df_2021_new['university'] == 'University of California, Berkeley (UCB)' # Only modify Berkeley observation
+
+    # Define numeric score/attribute columns
+    score_columns = ['academic reputation', 'employer reputation', 'faculty student', 'citations per faculty', 'overall score']
+    for col in score_columns: # Ensure Berkeley has max for each score (up to 100)
+        df_2021_new.loc[mask, col] = min(df_2021_new[col].max() + 1, 100)
+
+    # Create a new score that is the simple sum of all attributes and overall score
+    df_2021_new['new_score'] = df_2021_new[score_columns].sum(axis=1)
+
+    return df_2021_new
 
 def q20b(dfs):
-    # TODO
-    raise NotImplementedError
-    # For your answer, return the top 10 university names as a list.
+    # Sort dataframe created with helper by our new score
+    df_2021 = q20a(dfs).sort_values(by='new_score', ascending=False)
+    return df_2021['university'].head(10).tolist() # Return top 10 universities as list
 
 """
 21. Exploring data manipulation and falsification, continued
