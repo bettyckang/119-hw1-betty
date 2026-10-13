@@ -586,7 +586,7 @@ Comment on why the country above is at the top of the list.
 
 === ANSWER Q12b BELOW ===
 
-Singapore tops the ranking because it has a very high overall score, near 100. The faculty student score is perfect, with employer reputation slightly lowering overall score. 
+Singapore tops the ranking because it has a very high overall score. The faculty student score is perfect, with employer reputation slightly lowering overall score. 
 This indicates that Singapore has a strong academic reputation and is highly regarded by employers, which contributes to its high overall score.
 Singapore is globally regarded as a first world country with a strong education system, which is reflected in its high ranking.
 
@@ -722,6 +722,13 @@ As the answer to this part, return the name of the plot you saved.
 Note:
 *   All universities must be in the same plot.
 *   Your graph should be clear and legend should be placed suitably
+
+=== ANSWER Q17a BELOW ===
+
+I chose a line plot. This allows me to easily visualize how scores change across years and visualize the rankings.
+Each line represents a university, with the x-axis representing a time progression (one point for each year).
+
+=== END OF Q17a ANSWER ===
 """
 
 def q17a(top_10):
@@ -784,6 +791,7 @@ def q18(dfs):
     df_2021_new = df_2021.drop(columns=["university", "region", "rank", "year"])
 
     corr_matrix = df_2021_new.corr() # Create correlation matrix
+    print(corr_matrix)
     
     plt.figure()
     sn.heatmap(corr_matrix, annot=True) # Create visual for correlation matrix
@@ -836,8 +844,8 @@ b.
 Use your new column to sort the data by the new values and return the top 10 university names as a list.
 
 """
-
-def q20a(dfs):
+# Need to create a helper that will pass the necessary dataframe for both parts of question
+def q20_helper(dfs):
     df_2021 = dfs[-1] # Obtain only 2021 dataframe
     df_2021_new = df_2021.drop(columns=["rank"]) # Drop rank column since we will rerank
     mask = df_2021_new['university'] == 'University of California, Berkeley (UCB)' # Only modify Berkeley observation
@@ -853,9 +861,14 @@ def q20a(dfs):
 
     return df_2021_new
 
+def q20a(dfs):
+    df_2021 = q20_helper(dfs) # Create dataframe with new score
+    mask = df_2021['university'] == 'University of California, Berkeley (UCB)'
+    return df_2021.loc[mask, 'new_score'].iloc[0] # Return Berkeley's new score
+
 def q20b(dfs):
     # Sort dataframe created with helper by our new score
-    df_2021 = q20a(dfs).sort_values(by='new_score', ascending=False)
+    df_2021 = q20_helper(dfs).sort_values(by='new_score', ascending=False)
     return df_2021['university'].head(10).tolist() # Return top 10 universities as list
 
 """
@@ -873,16 +886,22 @@ The function does not take an input; you should get it from the file.
 
 Return the top 10 university names as a list from the falsified data.
 """
-
-def q21():
+# Helper function that creates falsified data 
+def q21_helper():
+    # Read in original source
     df_2021 = pd.read_csv('data/2021.csv', encoding='latin-1')
     mask = df_2021['University'] == 'University of California, Berkeley (UCB)' # Only modify Berkeley observation
     df_2021.loc[mask, 'Overall Score'] = df_2021['Overall Score'].max() + 1 # Make Berkeley's overall score larger than current max (should be 101)
     df_2021 = df_2021.sort_values(by='Overall Score', ascending=False)
 
-    # Write back to source for falsified file
+    # Write back to falsified file
     df_2021.to_csv('data/2021_falsified.csv', encoding='latin-1', index=False)
-    
+    return
+
+def q21():
+    q21_helper() # Creates falsified file, no return
+    # Read in falsified file
+    df_2021 = pd.read_csv('data/2021_falsified.csv', encoding='latin-1')
     return df_2021['University'].head(10).tolist() 
 
 """
