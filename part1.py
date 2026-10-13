@@ -839,15 +839,16 @@ Use your new column to sort the data by the new values and return the top 10 uni
 
 def q20a(dfs):
     df_2021 = dfs[-1] # Obtain only 2021 dataframe
-    df_2021_new = df_2021.drop(columns=["rank"]) # Drop ranking since we will rerank
+    df_2021_new = df_2021.drop(columns=["rank"]) # Drop rank column since we will rerank
     mask = df_2021_new['university'] == 'University of California, Berkeley (UCB)' # Only modify Berkeley observation
 
-    # Define numeric score/attribute columns
-    score_columns = ['academic reputation', 'employer reputation', 'faculty student', 'citations per faculty', 'overall score']
-    for col in score_columns: # Ensure Berkeley has max for each score (up to 100)
-        df_2021_new.loc[mask, col] = min(df_2021_new[col].max() + 1, 100)
+    df_2021_new['swag level'] = 0 # Create new attribute and set to zero for all other universities
+    df_2021_new.loc[mask, 'swag level'] = 100 # Give Berkeley a swag level so it comes out on top
 
-    # Create a new score that is the simple sum of all attributes and overall score
+    # Define numeric score/attribute columns
+    score_columns = ['academic reputation', 'employer reputation', 'faculty student', 'citations per faculty', 'swag level']
+
+    # Create a new score that is the simple sum of all attributes
     df_2021_new['new_score'] = df_2021_new[score_columns].sum(axis=1)
 
     return df_2021_new
@@ -874,8 +875,15 @@ Return the top 10 university names as a list from the falsified data.
 """
 
 def q21():
-    # TODO
-    raise NotImplementedError
+    df_2021 = pd.read_csv('data/2021.csv', encoding='latin-1')
+    mask = df_2021['University'] == 'University of California, Berkeley (UCB)' # Only modify Berkeley observation
+    df_2021.loc[mask, 'Overall Score'] = df_2021['Overall Score'].max() + 1 # Make Berkeley's overall score larger than current max (should be 101)
+    df_2021 = df_2021.sort_values(by='Overall Score', ascending=False)
+
+    # Write back to source for falsified file
+    df_2021.to_csv('data/2021_falsified.csv', encoding='latin-1', index=False)
+    
+    return df_2021['University'].head(10).tolist() 
 
 """
 22. Exploring data manipulation and falsification, continued
@@ -886,6 +894,9 @@ if you were a "bad actor" trying to manipulate the rankings?
 Which do you think would be the most difficult to detect?
 
 === ANSWER Q22 BELOW ===
+
+It would be most effective to manipulate the method of ranking through score calculation. This is more subtle and will be more likely to pass data audits.
+Additionally, when working with non-technical personnel, they may not fully understand a more complicated algorithm.
 
 === END OF Q22 ANSWER ===
 """
