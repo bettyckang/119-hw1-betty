@@ -1,0 +1,18 @@
+q1,bar chart
+q2a,[23121397.93197843, 48631033.991378605, 50836960.33071867]
+q3,1
+q4a,[0.0002542103175073862, 0.00013329554349184036, 0.00011239899322390556]
+q5a,Not Implemented
+q5b,Not Implemented
+q6,Not Implemented
+q7,Not Implemented
+q8,Not Implemented
+q9a,Not Implemented
+q9b,Not Implemented
+q11,Not Implemented
+q12,Not Implemented
+q13a,Not Implemented
+q13b,Not Implemented
+extra credit (a),Not Implemented
+extra credit (b),Not Implemented
+PART 2,13
