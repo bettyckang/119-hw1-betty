@@ -105,6 +105,18 @@ def load_input():
     # ...and keep this line to return the dataframes.
     return [df_2019, df_2020, df_2021]
 
+# New load function needed for single line dataframes
+# To be used in part2
+def q5b_load_input():
+    dfs = []
+    for year in [2019, 2020, 2021]:
+        df = pd.read_csv(f"data/{year}_singular.csv", encoding="latin-1")
+        df.columns = df.columns.str.lower()
+        df = df[NEW_COLUMNS]
+        dfs.append(df)
+
+    return dfs
+
 def q1(dfs):
     # As the "answer" to this part, let's just return the number of dataframes.
     # Check that your answer shows up in part1-answers.txt.
@@ -247,7 +259,7 @@ def q4(dfs):
     # Loop through each dataframe and sample 5 rows
     for df in dfs:
         university_column = df.columns.get_loc("university") # Get the index of the university column
-        df_sample = df.sample(5) # Get a random sample of 5 rows
+        df_sample = df.sample(min(5, len(df))) # Get a random sample of 5 rows (for part1) and only 1 row for part2 single dataset
         universities = df_sample.iloc[:, university_column].values.tolist() # Get the university name at the random index (value only)
 
         # Append the list of universities to the list of lists
@@ -579,6 +591,30 @@ def q12a(avg_2021):
 
     return (top_country, declined.iloc[0]['region'])
 
+# Rewrite it to load in 2019 dataset with only one observation
+def q12a_adjusted(avg_2021):
+    # Get the country with the highest overall score in 2021
+    avg_2021_sorted = avg_2021.sort_values(by='overall score', ascending=False)
+    top_country = avg_2021_sorted.iloc[0]['region'] 
+
+    # Get a country that went down in the rankings between 2019 and 2021
+    df_2019 = q5b_load_input()[0] # Load in 2019 dataframe with singular value
+    avg_2019 = df_2019.groupby('region')[['overall score']].mean().reset_index()
+    avg_2019_sorted = avg_2019.sort_values(by='overall score', ascending=False)
+
+    # Create ranking columns for merge
+    avg_2019_sorted['ranking'] = range(1, len(avg_2019_sorted) + 1)
+    avg_2021_sorted['ranking'] = range(1, len(avg_2021_sorted) + 1)
+
+    # Merge to compare rankings directly
+    merged = pd.merge(avg_2019_sorted, avg_2021_sorted, on='region', suffixes=('_2019', '_2021'))
+    declined = merged[merged['ranking_2021'] > merged['ranking_2019']]
+
+    # Declined may be empty - handle case to prevent indexerror
+    declined_country = (declined.iloc[0]['region'] if not declined.empty else None)
+
+    return (top_country, declined_country)
+
 """
 12b.
 Comment on why the country above is at the top of the list.
@@ -794,7 +830,8 @@ def q18(dfs):
     print(corr_matrix)
     
     plt.figure()
-    sn.heatmap(corr_matrix, annot=True) # Create visual for correlation matrix
+    # Filling NAs with 0 to prevent errors for part2 with only one observation
+    sn.heatmap(corr_matrix.fillna(0), annot=True) # Create visual for correlation matrix
     plt.savefig('output/part1-18.png', bbox_inches='tight') 
 
     return "output/part1-18.png"
@@ -903,6 +940,23 @@ def q21():
     # Read in falsified file
     df_2021 = pd.read_csv('data/2021_falsified.csv', encoding='latin-1')
     return df_2021['University'].head(10).tolist() 
+
+# Adjusted for one line csv file, to be used in part2
+def q21_adjusted():
+    # Read in source with one observation
+    df_2021 = pd.read_csv('data/2021_singular.csv', encoding='latin-1')
+
+    # Perform identical operations
+    mask = df_2021['university'] == 'University of California, Berkeley (UCB)' # Only modify Berkeley observation
+    df_2021.loc[mask, 'overall score'] = df_2021['overall score'].max() + 1 # Make Berkeley's overall score larger than current max (should be 101)
+    df_2021 = df_2021.sort_values(by='overall score', ascending=False)
+
+    # Write back to falsified file (new singular one)
+    df_2021.to_csv('data/2021_falsified_singular.csv', encoding='latin-1', index=False)
+
+    # Read in falsified file (new singular one)
+    df_2021 = pd.read_csv('data/2021_falsified_singular.csv', encoding='latin-1')
+    return 
 
 """
 22. Exploring data manipulation and falsification, continued

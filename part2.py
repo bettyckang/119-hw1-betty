@@ -12,6 +12,7 @@ to report which one is faster.
 import part1
 import time 
 import matplotlib.pyplot as plt
+import pandas as pd
 
 """
 === Questions 1-5: Throughput and Latency Helpers ===
@@ -288,12 +289,82 @@ You may need to write a new version of the pipeline for this to work.
 # part1.PART_1_PIPELINE
 
 def q5a():
-    # Return the throughput of the pipeline in part 1.
-    raise NotImplementedError
+    t = ThroughputHelper()
+    # Get size 
+    dfs = part1.load_input()
+    input_size = sum(len(df) for df in dfs)
+    # Add part1 pipeline
+    t.add_pipeline("part1_pipeline", input_size, part1.PART_1_PIPELINE)
+    # Generate throughput
+    throughput = t.compare_throughput()
+
+    return throughput[0]
+
+# Create new one line datasets and write them back to csv for latency problem
+# I'm going to retain the row for UC Berkeley across the three dataframes
+# This allows merge to work successfully (since the same University is in all dataframes) and requires the least adjustment to questions 20/21
+
+def q5b_create_dataset():
+    dfs = part1.load_input()
+    year = 2019 # Start with first year (2019) and increment to 2021
+    for df in dfs:
+        df_singular = df[df['university'] == 'University of California, Berkeley (UCB)'].copy() # Retain only UC Berkeley observation
+        assert len(df_singular) == 1
+        df_singular.to_csv(f"data/{year}_singular.csv", encoding='latin-1', index=False) # Create and write out dataframes
+        year += 1
+    return 
+
+# Run this first to create necessary files
+q5b_create_dataset()
+
+def PART_1_PIPELINE_SINGLE():
+    dfs = part1.q5b_load_input()
+    # Q1-Q6
+    part1.q1(dfs)
+    part1.q2(dfs)
+    part1.q3(dfs)
+    part1.q4(dfs)
+    part1.q5a(dfs)
+    part1.q5b(dfs)
+    part1.q5c()
+    part1.q6c()
+
+    # Q7-Q10
+    part1.q7(dfs)
+    part1.q8a(dfs)
+    part1.q9(dfs)
+
+    avg_2021 = part1.q10_helper(dfs)
+    part1.q10(avg_2021)
+
+    # Q11-Q14
+    part1.q11(avg_2021)
+    part1.q12a_adjusted(avg_2021) # Adjusted to use new dataframe with one row
+    part1.q13a(avg_2021)
+    part1.q14a(avg_2021)
+
+    # Q15-Q17
+    top_10 = part1.q15_helper(dfs)
+    part1.q15(top_10)
+    part1.q16(top_10)
+    part1.q17a(top_10)
+
+    # Q18
+    part1.q18(dfs)
+
+    # Q20-Q21
+    part1.q20a(dfs)
+    part1.q20b(dfs)
+    part1.q21_adjusted() # Adjusted to use new dataframe with one row
+    
+    return
 
 def q5b():
-    # Return the latency of the pipeline in part 1.
-    raise NotImplementedError
+    l = LatencyHelper()
+    l.add_pipeline("part1_pipeline_singular", PART_1_PIPELINE_SINGLE)
+    latency = l.compare_latency()
+
+    return latency[0]
 
 """
 ===== Questions 6-10: Performance Comparison 1 =====
