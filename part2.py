@@ -86,12 +86,13 @@ class ThroughputHelper:
     def generate_plot(self, filename):
         plt.figure()
         plt.bar(self.names, self.throughputs, label="Throughput")
+        plt.xticks(rotation=45)
         plt.xlabel("Pipeline")
         plt.ylabel("Throughput (Items Per Second)")
         plt.title("Pipeline Throughput Comparison")
         plt.legend()
 
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
         return
 
 """
@@ -210,11 +211,12 @@ class LatencyHelper:
         plt.figure()
         plt.bar(self.names, self.latencies, label="Latency")
         plt.xlabel("Pipeline")
+        plt.xticks(rotation=45)
         plt.ylabel("Latency (Milliseconds)")
         plt.title("Pipeline Latency Comparison")
         plt.legend()
 
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
         return
 
 """
@@ -415,20 +417,35 @@ See if you can compute this using Pandas functions only.
 """
 
 def load_input(filename):
-    # Return a dataframe containing the population data
-    # **Clean the data here**
-    raise NotImplementedError
+    df = pd.read_csv(filename, encoding='latin-1')
+    df = df.dropna(subset=['Code']) # Remove continents and other regions with missing codes
+    df = df[df['Code'] != 'OWID_WRL'] # Remove World population
+
+    return df
 
 def population_pipeline(df):
-    # Input: the dataframe from load_input()
-    # Return a list of min, median, max, mean, and standard deviation
-    raise NotImplementedError
+    # Sort chronologically and group by country for calculations
+    by_country = df.sort_values('Year').groupby('Entity') 
+
+    # Find first and last years
+    min_year = by_country['Year'].min().astype(int)
+    max_year = by_country['Year'].max().astype(int)
+
+    # Since dataframe is sorted by date within countries, ,first() and .last() will obtain population in first/last years
+    first_population = by_country['Population (historical)'].first().astype(int)
+    last_population = by_country['Population (historical)'].last().astype(int)
+
+    # Calculate population increases, drop NAs (only one year available)
+    population_increase = ((last_population - first_population) / (max_year - min_year)).dropna()
+    metrics = population_increase.describe()
+
+    # Returns as np float -> investigate in case of potential autograder problems
+    return [metrics['min'], metrics['50%'], metrics['max'], metrics['mean'], metrics['std']]
 
 def q6():
-    # As your answer to this part,
-    # call load_input() and then population_pipeline()
-    # Return a list of min, median, max, mean, and standard deviation
-    raise NotImplementedError
+    df = load_input('data/population.csv')
+    result = population_pipeline(df)
+    return result
 
 """
 7. Varying the input size
@@ -455,18 +472,42 @@ Each should return a dataframe.
 The input CSV file will have 600 rows, but the DataFrame (after your cleaning) may have less than that.
 """
 
+# Generate new files
+def generate_small():
+    original = pd.read_csv('data/population.csv', encoding='latin-1')
+    small = original.head(600)
+    small.to_csv('data/population-small.csv', encoding='latin-1', index=False)
+    return
+
+def generate_medium():
+    original = pd.read_csv('data/population.csv', encoding='latin-1')
+    medium = original.head(6000)
+    medium.to_csv('data/population-medium.csv', encoding='latin-1', index=False)
+    return
+
+def generate_single():
+    original = pd.read_csv('data/population.csv', encoding='latin-1')
+    single = original.head(1)
+    single.to_csv('data/population-single-row.csv', encoding='latin-1', index=False)
+    return
+
+# Run to get new files
+generate_small()
+generate_medium()
+generate_single()
+
+# Use old load_input function to replicate cleaning on the new dataframes generated
 def load_input_small():
-    raise NotImplementedError
+    return load_input('data/population-small.csv')
 
 def load_input_medium():
-    raise NotImplementedError
+    return load_input('data/population-medium.csv')
 
 def load_input_large():
-    raise NotImplementedError
+    return load_input('data/population.csv')
 
 def load_input_single_row():
-    # This is the pipeline we will use for latency.
-    raise NotImplementedError
+    return load_input('data/population-single-row.csv')
 
 def q7():
     # Don't modify this part
@@ -498,16 +539,24 @@ that you think is meaningful.
 """
 
 def baseline_small():
-    raise NotImplementedError
+    s = load_input_small()
+    result = population_pipeline(s)
+    return result
 
 def baseline_medium():
-    raise NotImplementedError
+    m = load_input_small()
+    result = population_pipeline(m)
+    return result
 
 def baseline_large():
-    raise NotImplementedError
+    l = load_input_small()
+    result = population_pipeline(l)
+    return result
 
 def baseline_latency():
-    raise NotImplementedError
+    x = load_input_small()
+    result = population_pipeline(x)
+    return result
 
 def q8():
     # Don't modify this part
@@ -538,35 +587,56 @@ b. Generate a plot in output/part2-q9b.png of the latencies
     baseline_latency, fromvar_latency
 """
 
-# TODO
-# POPULATION_SMALL =
-# POPULATION_MEDIUM =
-# POPULATION_LARGE =
-# POPULATION_SINGLE_ROW =
+POPULATION_SMALL = load_input_small()
+POPULATION_MEDIUM = load_input_medium()
+POPULATION_LARGE = load_input_large()
+POPULATION_SINGLE_ROW = load_input_single_row()
 
 def fromvar_small():
-    raise NotImplementedError
+    return population_pipeline(POPULATION_SMALL)
 
 def fromvar_medium():
-    raise NotImplementedError
+    return population_pipeline(POPULATION_MEDIUM)
 
 def fromvar_large():
-    raise NotImplementedError
+    return population_pipeline(POPULATION_LARGE)
 
 def fromvar_latency():
-    raise NotImplementedError
+    return population_pipeline(POPULATION_SINGLE_ROW)
 
 def q9a():
-    # Add all 6 pipelines for a throughput comparison
-    # Generate plot in output/part2-q9a.png
-    # Return list of 6 throughputs
-    raise NotImplementedError
+    # Create a ThroughputHelper object
+    h = ThroughputHelper()
+    
+    # Add the baseline pipelines
+    h.add_pipeline("small_baseline", len(POPULATION_SMALL), baseline_small)
+    h.add_pipeline("medium_baseline", len(POPULATION_MEDIUM), baseline_medium)
+    h.add_pipeline("large_baseline", len(POPULATION_LARGE), baseline_large)
+
+    # Add from var pipelines
+    h.add_pipeline("small_fromvar", len(POPULATION_SMALL), fromvar_small)
+    h.add_pipeline("medium_fromvar", len(POPULATION_MEDIUM), fromvar_medium)
+    h.add_pipeline("large_fromvar", len(POPULATION_LARGE), fromvar_large)
+
+    # Generate throughputs and create plot
+    throughputs = h.compare_throughput()
+    h.generate_plot('output/part2-q9a.png')
+
+    return throughputs
 
 def q9b():
-    # Add 2 pipelines for a latency comparison
-    # Generate plot in output/part2-q9b.png
-    # Return list of 2 latencies
-    raise NotImplementedError
+    # Create a LatencyHelper object
+    h = LatencyHelper()
+
+    # Add the 2 pipelines
+    h.add_pipeline("baseline", baseline_latency)
+    h.add_pipeline("fromvar", fromvar_latency)
+
+    # Generate latencies and create plot
+    latencies = h.compare_latency()
+    h.generate_plot('output/part2-q9b.png')
+
+    return latencies
 
 """
 10.
@@ -576,6 +646,12 @@ Which differs more, throughput or latency?
 What does this experiment show?
 
 ===== ANSWER Q10 BELOW =====
+
+The difference between the baseline and fromvar pipelines is large and increases exponentially with dataset size. 
+The latency of the baseline was twice as large as the fromvar, and the large baseline throughput was three times bigger than the large fromvar throughput
+Throughput differs more for large dataset, but latency differs more when considering the small and medium dataset throughput comparisons
+Surprisingly, the fromvar small throughput actually appears larger than the baseline
+This experience shows that loading an input from file is measurably slower than from a local pandas dataframe and that the difference increases with dataset size
 
 ===== END OF Q10 ANSWER =====
 """
@@ -608,6 +684,37 @@ Create a new pipeline:
 """
 
 def for_loop_pipeline(df):
+    # Ensure sorted by year
+    df = df.sort_values('Year')
+    country_data = {}
+
+    # Iterate through rows
+    for i, row in df.iterrows(df):
+        country = row['Entity'] 
+        population = row['Population (historical)']
+        year = row['Year']
+
+        # For first observation of country set both min and max values
+        if country not in country_data:
+            country_data[country] = {
+                'min_year': year,
+                'max_year': year,
+                'first_population': population,
+                'last_population': population
+            }
+        else: 
+            # Iteratively replace max values for year and population until there are no more observations
+            country_data[country]['max_year'] = year
+            country_data[country]['last_population'] = population
+
+    increases = []
+    for country, values in country_data.items:
+        years = values['max_year'] - values['min_year']
+        # Account for countries with only one year
+        if years > 0: 
+            increase = (values['last_population'] - values['first_population']) / years
+            increases.append(increase)
+
     # Input: the dataframe from load_input()
     # Return a list of min, median, max, mean, and standard deviation
     raise NotImplementedError
