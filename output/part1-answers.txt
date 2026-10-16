@@ -1,7 +1,7 @@
 q1,3
 q2,True
 q3a,False
-q4,['University of Birmingham', 'University of Toronto', 'Ludwig-Maximilians-Universität München', 'The London School of Economics and Political Science (LSE)', 'Rice University']
+q4,['Kyoto University', 'Tohoku University', 'Durham University', 'Imperial College London', 'The University of Auckland']
 q5a,[100, 100, 100, 100, 100, 100, 100, 100]
 q5b,[100, 100, 100, 100, 100, 100, 100, 100]
 q5c,[100, 100, 100, 100, 100, 100, 100, 100]

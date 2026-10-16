@@ -544,17 +544,17 @@ def baseline_small():
     return result
 
 def baseline_medium():
-    m = load_input_small()
+    m = load_input_medium()
     result = population_pipeline(m)
     return result
 
 def baseline_large():
-    l = load_input_small()
+    l = load_input_large()
     result = population_pipeline(l)
     return result
 
 def baseline_latency():
-    x = load_input_small()
+    x = load_input_single_row()
     result = population_pipeline(x)
     return result
 
@@ -647,11 +647,10 @@ What does this experiment show?
 
 ===== ANSWER Q10 BELOW =====
 
-The difference between the baseline and fromvar pipelines is large and increases exponentially with dataset size. 
-The latency of the baseline was twice as large as the fromvar, and the large baseline throughput was three times bigger than the large fromvar throughput
-Throughput differs more for large dataset, but latency differs more when considering the small and medium dataset throughput comparisons
-Surprisingly, the fromvar small throughput actually appears larger than the baseline
-This experience shows that loading an input from file is measurably slower than from a local pandas dataframe and that the difference increases with dataset size
+The throughput for the pipelines using variables are significantly higher than when reading in the file under the baseline implementation
+This increases with dataset size, with the throughput of the large from variable pipeline having a throughput more than 3 times larger than the large baseline pipeline
+The latency is over 3 times larger for the baseline than the from variable implementation, so the difference is about the same for the large datasets (relative)
+This experiment shows that reading in the dataset introduces more overhead than using local pandas variables and that the difference grows when using larger datasets
 
 ===== END OF Q10 ANSWER =====
 """
@@ -714,24 +713,31 @@ def for_loop_pipeline(df):
         if years > 0: 
             increase = (values['last_population'] - values['first_population']) / years
             increases.append(increase)
+    
+    if len(increases) == 0:
+        return [0.0, 0.0, 0.0, 0.0, 0.0]
 
-    increases.sort() # Sort to simplify min and max search
-    n = len(increases)
-    minimum = increases[0]
-    maximum = increases[-1]
-    mean = sum(increases) / n
+    else: 
+        increases.sort() # Sort to simplify min and max search
+        n = len(increases)
+        minimum = increases[0]
+        maximum = increases[-1]
+        mean = sum(increases) / n
 
-    # Calculate median, accounting for even and odd length 
-    if n % 2 != 0:
-        median = increases[n // 2] # Odd
-    else:
-        median = (increases[n/2] + increases[n/2 - 1]) / 2 # Even = find average of middle two
+        # Calculate median, accounting for even and odd length 
+        if n % 2 != 0:
+            median = increases[n // 2] # Odd
+        else:
+            median = (increases[n // 2] + increases[n // 2 - 1]) / 2 # Even = find average of middle two
 
-    # Calculate standard deviation manually
-    variance = sum((x - mean) ** 2 for x in increases) / (n - 1)
-    std = variance ** 0.5
+        # Calculate standard deviation manually, accounting for countries with only one year (n=1)
+        if n > 1:
+            variance = sum((x - mean) ** 2 for x in increases) / (n - 1)
+            std = variance ** 0.5
+        else:
+            std = 0.0 
 
-    return [float(minimum), float(median), float(maximum), float(mean), float(std)]
+        return [float(minimum), float(median), float(maximum), float(mean), float(std)]
         
 
 def q11():
@@ -747,16 +753,24 @@ As before, write 4 pipelines based on the datasets from Q7.
 """
 
 def for_loop_small():
-    raise NotImplementedError
+    s = load_input_small()
+    result = for_loop_pipeline(s)
+    return result
 
 def for_loop_medium():
-    raise NotImplementedError
+    m = load_input_medium()
+    result = for_loop_pipeline(m)
+    return result
 
 def for_loop_large():
-    raise NotImplementedError
+    l = load_input_large()
+    result = for_loop_pipeline(l)
+    return result
 
 def for_loop_latency():
-    raise NotImplementedError
+    x = load_input_single_row()
+    result = for_loop_pipeline(x)
+    return result
 
 def q12():
     # Don't modify this part
@@ -778,16 +792,38 @@ b. Generate a plot in output/part2-q13b.png of the latencies
 """
 
 def q13a():
-    # Add all 6 pipelines for a throughput comparison
-    # Generate plot in output/part2-q13a.png
-    # Return list of 6 throughputs
-    raise NotImplementedError
+    # Create a ThroughputHelper object
+    h = ThroughputHelper()
+    
+    # Add the baseline pipelines
+    h.add_pipeline("small_baseline", len(POPULATION_SMALL), baseline_small)
+    h.add_pipeline("medium_baseline", len(POPULATION_MEDIUM), baseline_medium)
+    h.add_pipeline("large_baseline", len(POPULATION_LARGE), baseline_large)
+
+    # Add for loop pipelines
+    h.add_pipeline("for_loop_small", len(POPULATION_SMALL), for_loop_small)
+    h.add_pipeline("for_loop_medium", len(POPULATION_MEDIUM), for_loop_medium)
+    h.add_pipeline("for_loop_large", len(POPULATION_LARGE), for_loop_large)
+
+    # Generate throughputs and create plot
+    throughputs = h.compare_throughput()
+    h.generate_plot('output/part2-q13a.png')
+
+    return throughputs
 
 def q13b():
-    # Add 2 pipelines for a latency comparison
-    # Generate plot in output/part2-q13b.png
-    # Return list of 2 latencies
-    raise NotImplementedError
+    # Create a LatencyHelper object
+    h = LatencyHelper()
+
+    # Add the 2 pipelines
+    h.add_pipeline("baseline", baseline_latency)
+    h.add_pipeline("for_loop", for_loop_latency)
+
+    # Generate latencies and create plot
+    latencies = h.compare_latency()
+    h.generate_plot('output/part2-q13b.png')
+
+    return latencies
 
 """
 14.
@@ -797,11 +833,15 @@ Comment on the results you got!
 
 ===== ANSWER Q14a BELOW =====
 
+The baseline pipelines are faster in terms of throughput
+
 ===== END OF Q14a ANSWER =====
 
 14b. Which pipeline is faster in terms of latency?
 
 ===== ANSWER Q14b BELOW =====
+
+The for loop pipeline is faster in terms of latency
 
 ===== END OF Q14b ANSWER =====
 
@@ -809,6 +849,10 @@ Comment on the results you got!
 What does this experiment show?
 
 ===== ANSWER Q14c BELOW =====
+
+The throughput for the large and medium baseline pipelines were significantly higher, while the throughput for the small baseline was around the same as the for loop pipelines
+This shows that processing speed and throughput increase with dataset size when using pandas operations, which are more efficient with larger datasets, but remain relatively constant when using for loops
+Using pandas operations for large datasets is more efficient, but the overhead may outweigh these benefits on small inputs like in the latency test
 
 ===== END OF Q14c ANSWER =====
 """
@@ -823,6 +867,9 @@ had the biggest impact on performance?
 
 ===== ANSWER Q15 BELOW =====
 
+Vectorized vs. for loop had the largest impact on performance, with the throughputs on a large dataset of the vectorized baseline being around 30 times the throughput of the for loop implementation on the same dataset
+However, file vs. variable had a large impact on single row latency, with the local pandas variable achieving a latency around 4.7 times faster
+
 ===== END OF Q15 ANSWER =====
 
 16.
@@ -834,6 +881,8 @@ This is an open ended question.)
 
 ===== ANSWER Q16 BELOW =====
 
+I hypothesize that throughput increases with the size on an input dataset when using vectorized pandas functions but that the computational overhead may outweight the benefits on smaller datasets.
+
 ===== END OF Q16 ANSWER =====
 
 17.
@@ -844,6 +893,8 @@ throughput is related to latency.
 This is an open ended question.)
 
 ===== ANSWER Q17 BELOW =====
+
+I hypothesize that for pipelines processing the same number of items, higher throughput generally corresponds to lower latency (execution time). 
 
 ===== END OF Q17 ANSWER =====
 """
