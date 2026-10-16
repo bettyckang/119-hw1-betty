@@ -440,7 +440,7 @@ def population_pipeline(df):
     metrics = population_increase.describe()
 
     # Returns as np float -> investigate in case of potential autograder problems
-    return [metrics['min'], metrics['50%'], metrics['max'], metrics['mean'], metrics['std']]
+    return [float(metrics['min']), float(metrics['50%']), float(metrics['max']), float(metrics['mean']), float(metrics['std'])]
 
 def q6():
     df = load_input('data/population.csv')
@@ -689,7 +689,7 @@ def for_loop_pipeline(df):
     country_data = {}
 
     # Iterate through rows
-    for i, row in df.iterrows(df):
+    for i, row in df.iterrows():
         country = row['Entity'] 
         population = row['Population (historical)']
         year = row['Year']
@@ -708,23 +708,36 @@ def for_loop_pipeline(df):
             country_data[country]['last_population'] = population
 
     increases = []
-    for country, values in country_data.items:
+    for country, values in country_data.items():
         years = values['max_year'] - values['min_year']
         # Account for countries with only one year
         if years > 0: 
             increase = (values['last_population'] - values['first_population']) / years
             increases.append(increase)
 
-    # Input: the dataframe from load_input()
-    # Return a list of min, median, max, mean, and standard deviation
-    raise NotImplementedError
+    increases.sort() # Sort to simplify min and max search
+    n = len(increases)
+    minimum = increases[0]
+    maximum = increases[-1]
+    mean = sum(increases) / n
+
+    # Calculate median, accounting for even and odd length 
+    if n % 2 != 0:
+        median = increases[n // 2] # Odd
+    else:
+        median = (increases[n/2] + increases[n/2 - 1]) / 2 # Even = find average of middle two
+
+    # Calculate standard deviation manually
+    variance = sum((x - mean) ** 2 for x in increases) / (n - 1)
+    std = variance ** 0.5
+
+    return [float(minimum), float(median), float(maximum), float(mean), float(std)]
+        
 
 def q11():
-    # As your answer to this part, call load_input() and then
-    # for_loop_pipeline() to return the 5 numbers.
-    # (these should match the numbers you got in Q6.)
-    # ** Please return these as Python floats, not Numpy **
-    raise NotImplementedError
+    df = load_input('data/population.csv')
+    result = for_loop_pipeline(df)
+    return result
 
 """
 12.
