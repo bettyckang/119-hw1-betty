@@ -41,6 +41,9 @@ get uploaded when you submit.
 
 # You may need to conda install requests or pip3 install requests
 import requests
+import subprocess
+import sys
+from pathlib import Path
 
 def download_file(url, filename):
     r = requests.get(url)
@@ -48,25 +51,40 @@ def download_file(url, filename):
         f.write(r.content)
 
 def clone_repo(repo_url):
-    # TODO
-    raise NotImplementedError
+    repo_name = repo_url.rstrip("/").split("/")[-1]
+
+    # Only clone repository if it does not already exist in directory to prevent issues when running multiple times
+    if not os.path.exists(repo_name):
+        subprocess.run(["git", "clone", repo_url], check=True)
+    return
 
 def run_script(script_path, data_path):
-    # TODO
-    raise NotImplementedError
+    subprocess.run([sys.executable, script_path, data_path], check=True)
+    return
 
 def setup(repo_url, data_url, script_path):
-    # TODO
-    raise NotImplementedError
+    clone_repo(repo_url)
+    repo_name = repo_url.rstrip("/").split("/")[-1] # Extract repo name from url
+    repo_dir = Path(repo_name)
+
+    data_path = repo_dir / "data" / "test-input.txt"
+
+    download_file(data_url, data_path)
+
+    run_script(str(repo_dir / script_path), data_path)
+    return
 
 def q1():
-    # Call setup as described in the prompt
-    # TODO
-    # Read the file test-output.txt to a string
-    # TODO
-    # Return the integer value of the output
-    # TODO
-    raise NotImplementedError
+    setup(
+        "https://github.com/DavisPL-Teaching/119-hw1",
+        "https://raw.githubusercontent.com/DavisPL-Teaching/119-hw1/refs/heads/main/data/test-input.txt",
+        "test-script.py"
+    )
+
+    with open("output/test-output.txt", "r") as file:
+        result = file.read().strip()
+
+    return int(result)
 
 """
 2.
@@ -79,11 +97,17 @@ this scenario?
 
 === ANSWER Q2a BELOW ===
 
+When setting up the project on a new computer (e.g. new team member) 
+Part of the workflow would also be useful for fetching data for latest analysis every two weeks, although you would not want to clone the repository each time.
+Creating a pre-written script reduces manual errors. 
+
 === END OF Q2a ANSWER ===
 
 Do you see an alternative to using a script like setup()?
 
 === ANSWER Q2b BELOW ===
+
+Running the commands directly in shell
 
 === END OF Q2b ANSWER ===
 
@@ -125,16 +149,18 @@ any packages?
 """
 
 def setup_for_new_machine():
-    # TODO
-    raise NotImplementedError
+    # Software from HW0 
+    # Install Java and Git using Homebrew
+    subprocess.run(["brew", "install", "openjdk@21", "git"], check=True)
+
+    # Python packages from parts 1-3
+    packages = ["pandas", "numpy", "pytest", "matplotlib.pyplot", "seaborn", "random", "time", "requests", "pyspark"]
+    subprocess.run([sys.executable, "-m", "pip", "install"] + packages, check=True)
+
+    return
 
 def q3():
-    # As your answer, return a string containing
-    # the operating system name that you assumed the
-    # new machine to have.
-    # TODO
-    raise NotImplementedError
-    # os =
+    os = "macOS"
     return os
 
 """
@@ -147,6 +173,8 @@ scripts like setup() and setup_for_new_machine()
 in their day-to-day jobs?
 
 === ANSWER Q4 BELOW ===
+
+10% or less
 
 === END OF Q4 ANSWER ===
 
@@ -164,6 +192,9 @@ If you don't have a friend's machine, please speculate about
 what might happen if you tried. You can guess.
 
 === ANSWER Q5 BELOW ===
+
+I do not have access to another machine. If I did, I believe running the Q3 function would probably download necessary software, assuming a compatible OS system
+Issues may be encountered due to missing dependencies. For example, my code assumes homebrew is installed on the new machine.
 
 === END OF Q5 ANSWER ===
 
@@ -219,22 +250,20 @@ with:
     (cat filename ; echo)
 .
 """
+import os
 
 def pipeline_shell():
-    # TODO
-    raise NotImplementedError
-    # Return resulting integer
+    result = os.popen("cat data/population.csv | tail -n +2 | wc -l").read()
+    return int(result)
 
 def pipeline_pandas():
-    # TODO
-    raise NotImplementedError
-    # Return resulting integer
+    population = pd.read_csv("data/population.csv")
+    return len(population)
 
 def q6():
-    # As your answer to this part, check that both
-    # integers are the same and return one of them.
-    # TODO
-    raise NotImplementedError
+    result = pipeline_pandas()
+    assert pipeline_shell() == result
+    return result
 
 """
 Let's do a performance comparison between the two methods.
@@ -249,11 +278,21 @@ Additionally, generate a plot and save it in
 """
 
 def q7():
-    # Return a list of two floats
-    # [throughput for shell, throughput for pandas]
-    # (in rows per second)
-    # TODO
-    raise NotImplementedError
+    # Create a ThroughputHelper object
+    h = part2.ThroughputHelper()
+
+    # Size of population.csv
+    size = pipeline_pandas()
+
+    # Add the pipelines
+    h.add_pipeline("shell", size, pipeline_shell)
+    h.add_pipeline("pandas", size, pipeline_pandas)
+
+    # Generate throughputs and create plot
+    throughputs = h.compare_throughput()
+    h.generate_plot('output/part3-q7.png')
+
+    return throughputs
 
 """
 8. Latency
@@ -268,17 +307,26 @@ Additionally, generate a plot and save it in
 """
 
 def q8():
-    # Return a list of two floats
-    # [latency for shell, latency for pandas]
-    # (in milliseconds)
-    # TODO
-    raise NotImplementedError
+    # Create a LatencyHelper object
+    h = part2.LatencyHelper()
+
+    # Add the 3 pipelines.
+    h.add_pipeline("shell", pipeline_shell)
+    h.add_pipeline("pandas", pipeline_pandas)
+
+    # Generate latencies and create plot
+    latencies = h.compare_latency()
+    h.generate_plot('output/part3-q8.png')
+
+    return latencies
 
 """
 9. Which method is faster?
 Comment on anything else you notice below.
 
 === ANSWER Q9 BELOW ===
+
+The pandas method is muuch faster. The latency when measured over the whole pipeline is over four times slower using the shell, and the throughput for pandas is around 3 times higher.
 
 === END OF Q9 ANSWER ===
 """
