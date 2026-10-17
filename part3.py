@@ -154,7 +154,7 @@ def setup_for_new_machine():
     subprocess.run(["brew", "install", "openjdk@21", "git"], check=True)
 
     # Python packages from parts 1-3
-    packages = ["pandas", "numpy", "pytest", "matplotlib.pyplot", "seaborn", "random", "time", "requests", "pyspark"]
+    packages = ["pandas", "numpy", "pytest", "matplotlib", "seaborn", "random", "time", "requests", "pyspark"]
     subprocess.run([sys.executable, "-m", "pip", "install"] + packages, check=True)
 
     return
@@ -326,7 +326,7 @@ Comment on anything else you notice below.
 
 === ANSWER Q9 BELOW ===
 
-The pandas method is muuch faster. The latency when measured over the whole pipeline is over four times slower using the shell, and the throughput for pandas is around 3 times higher.
+The pandas method is much faster. The latency when measured over the whole pipeline is over four times slower using the shell, and the throughput for pandas is around 3 times higher.
 
 === END OF Q9 ANSWER ===
 """
